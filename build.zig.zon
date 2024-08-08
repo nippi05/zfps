@@ -3,10 +3,7 @@
     .version = "0.0.0",
 
     .dependencies = .{
-        .mach = .{
-            .url = "https://pkg.machengine.org/mach/9148754b7600fb0ab34dace4cfa328b9f105ea08.tar.gz",
-            .hash = "1220524a571c64a525a11cae1db1662b6786ef466e8aeab86090be04932a0d78f141",
-        },
+        .mach = .{ .path = "libs/mach" },
     },
     .paths = .{
         "build.zig",
