@@ -20,6 +20,13 @@ pub fn build(b: *std.Build) void {
     });
     exe.root_module.addImport("mach", mach_dep.module("mach"));
 
+    // Add zmath dependency
+    const zmath = b.dependency("zmath", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    exe.root_module.addImport("zmath", zmath.module("root"));
+
     const run_cmd = b.addRunArtifact(exe);
 
     run_cmd.step.dependOn(b.getInstallStep());
