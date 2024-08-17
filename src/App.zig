@@ -3,6 +3,8 @@ const mach = @import("mach");
 const zm = @import("zmath");
 const gpu = mach.gpu;
 
+const cube = @import("cube.zig");
+
 pub const name = .app;
 pub const Mod = mach.Mod(@This());
 
@@ -15,6 +17,7 @@ pub const systems = .{
 title_timer: mach.Timer,
 pipeline: *gpu.RenderPipeline,
 uniform_buffer: *gpu.Buffer,
+vertex_buffer: *gpu.Buffer,
 bind_group: *gpu.BindGroup,
 
 const UniformBufferObject = struct {
@@ -25,6 +28,7 @@ pub fn deinit(game: *Mod) void {
     game.state().pipeline.release();
     game.state().uniform_buffer.release();
     game.state().bind_group.release();
+    game.state().vertex_buffer.release();
 }
 
 fn init(game: *Mod, core: *mach.Core.Mod) !void {
@@ -34,6 +38,29 @@ fn init(game: *Mod, core: *mach.Core.Mod) !void {
     // Create our shader module
     const shader_module = device.createShaderModuleWGSL("shader.wgsl", @embedFile("shader.wgsl"));
     defer shader_module.release();
+
+    const vertex_attributes = [_]gpu.VertexAttribute{.{
+        .format = .float32x4,
+        .offset = @offsetOf(cube.Vertex, "pos"),
+        .shader_location = 0,
+    }};
+
+    const vertex_buffer_layout = gpu.VertexBufferLayout.init(.{
+        .array_stride = @sizeOf(cube.Vertex),
+        .step_mode = .vertex,
+        .attributes = &vertex_attributes,
+    });
+
+    const vertex_buffer = device.createBuffer(&.{
+        .label = label ++ " vertex buffer",
+        .usage = .{ .vertex = true, .copy_dst = true },
+        .size = @sizeOf(cube.Vertex) * cube.vertices.len,
+        .mapped_at_creation = .true,
+    });
+
+    const vertex_mapped = vertex_buffer.getMappedRange(cube.Vertex, 0, cube.vertices.len).?;
+    @memcpy(vertex_mapped, cube.vertices[0..]);
+    vertex_buffer.unmap();
 
     // Blend state describes how rendered colors get blended
     const blend = gpu.BlendState{};
@@ -95,10 +122,11 @@ fn init(game: *Mod, core: *mach.Core.Mod) !void {
         .label = label,
         .fragment = &fragment,
         .layout = pipeline_layout,
-        .vertex = gpu.VertexState{
+        .vertex = gpu.VertexState.init(.{
             .module = shader_module,
             .entry_point = "vertex_main",
-        },
+            .buffers = &.{vertex_buffer_layout},
+        }),
     };
     const pipeline = device.createRenderPipeline(&pipeline_descriptor);
 
@@ -108,6 +136,7 @@ fn init(game: *Mod, core: *mach.Core.Mod) !void {
         .pipeline = pipeline,
         .bind_group = bind_group,
         .uniform_buffer = uniform_buffer,
+        .vertex_buffer = vertex_buffer,
     });
     // try updateWindowTitle(core);
 }
@@ -140,7 +169,7 @@ fn update(core: *mach.Core.Mod, game: *Mod) !void {
         const time: f32 = game.state().title_timer.read();
         const model = zm.mul(zm.rotationX(time * (std.math.pi / 2.0)), zm.rotationZ(time * (std.math.pi / 2.0)));
         const view = zm.lookAtLh(
-            zm.Vec{ 0, 4, -2, 1 },
+            zm.Vec{ 0, 4, -4, 1 },
             zm.Vec{ 0, 0, 0, 1 },
             zm.Vec{ 0, 1, 0, 0 },
         );
@@ -176,8 +205,9 @@ fn update(core: *mach.Core.Mod, game: *Mod) !void {
     // Draw
     render_pass.setPipeline(game.state().pipeline);
     render_pass.setBindGroup(0, game.state().bind_group, null);
+    render_pass.setVertexBuffer(0, game.state().vertex_buffer, 0, @sizeOf(cube.Vertex) * cube.vertices.len);
 
-    render_pass.draw(3, 1, 0, 0);
+    render_pass.draw(cube.vertices.len, 1, 0, 0);
 
     // Finish render pass
     render_pass.end();
