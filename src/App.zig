@@ -93,12 +93,12 @@ fn update(
         const key = @field(MoveKeys, field.name);
         if (pressed_keys.isSet(@intFromEnum(key))) {
             switch (key) {
-                .w => player_velocity[2] = move_speed,
-                .s => player_velocity[2] = -move_speed,
-                .d => player_velocity[0] = move_speed,
-                .a => player_velocity[0] = -move_speed,
-                .space => player_velocity[1] = move_speed,
-                .left_shift => player_velocity[1] = -move_speed,
+                .w => player_velocity[2] += move_speed,
+                .s => player_velocity[2] -= move_speed,
+                .d => player_velocity[0] += move_speed,
+                .a => player_velocity[0] -= move_speed,
+                .space => player_velocity[1] += move_speed,
+                .left_shift => player_velocity[1] -= move_speed,
             }
         }
     }
