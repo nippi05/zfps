@@ -97,7 +97,10 @@ fn update(
                 switch (e.key) {
                     inline else => |key| {
                         if (@hasField(MoveKeys, @tagName(key))) {
-                            pressed_keys.set(@intFromEnum(@field(MoveKeys, @tagName(key))));
+                            pressed_keys.set(@intFromEnum(@field(
+                                MoveKeys,
+                                @tagName(key),
+                            )));
                         }
                     },
                 }
@@ -106,7 +109,10 @@ fn update(
                 switch (e.key) {
                     inline else => |key| {
                         if (@hasField(MoveKeys, @tagName(key))) {
-                            pressed_keys.unset(@intFromEnum(@field(MoveKeys, @tagName(key))));
+                            pressed_keys.unset(@intFromEnum(@field(
+                                MoveKeys,
+                                @tagName(key),
+                            )));
                         }
                     },
                 }
@@ -145,7 +151,11 @@ fn update(
         player,
         .rotation,
         .{
-            std.math.clamp(prev_rotation[0] + rotating_angles[0], -std.math.pi / @as(comptime_float, 2), std.math.pi / @as(comptime_float, 2)),
+            std.math.clamp(
+                prev_rotation[0] + rotating_angles[0],
+                -std.math.pi / @as(comptime_float, 2),
+                std.math.pi / @as(comptime_float, 2),
+            ),
             prev_rotation[1] + rotating_angles[1],
         },
     );

@@ -37,7 +37,10 @@ fn init(
     const device: *gpu.Device = core.state().device;
 
     // Create our shader module
-    const shader_module = device.createShaderModuleWGSL("shader.wgsl", @embedFile("shader.wgsl"));
+    const shader_module = device.createShaderModuleWGSL(
+        "shader.wgsl",
+        @embedFile("shader.wgsl"),
+    );
     defer shader_module.release();
 
     const vertex_attributes = [_]gpu.VertexAttribute{.{
@@ -59,7 +62,11 @@ fn init(
         .mapped_at_creation = .true,
     });
 
-    const vertex_mapped = vertex_buffer.getMappedRange(cube.Vertex, 0, cube.vertices.len).?;
+    const vertex_mapped = vertex_buffer.getMappedRange(
+        cube.Vertex,
+        0,
+        cube.vertices.len,
+    ).?;
     @memcpy(vertex_mapped, cube.vertices[0..]);
     vertex_buffer.unmap();
 
@@ -69,7 +76,10 @@ fn init(
     // Color target describes e.g. the pixel format of the window we are rendering to.
     const color_target = gpu.ColorTargetState{
         // "get preferred format"
-        .format = core.get(core.state().main_window, .framebuffer_format).?,
+        .format = core.get(
+            core.state().main_window,
+            .framebuffer_format,
+        ).?,
         .blend = &blend,
     };
 
@@ -94,29 +104,35 @@ fn init(
         false,
         0,
     );
-    const bind_group_layout = device.createBindGroupLayout(&gpu.BindGroupLayout.Descriptor.init(.{
-        .label = label,
-        .entries = &.{bind_group_layout_entry},
-    }));
+    const bind_group_layout = device.createBindGroupLayout(
+        &gpu.BindGroupLayout.Descriptor.init(.{
+            .label = label,
+            .entries = &.{bind_group_layout_entry},
+        }),
+    );
     defer bind_group_layout.release();
 
-    const bind_group = device.createBindGroup(&gpu.BindGroup.Descriptor.init(.{
-        .label = label,
-        .layout = bind_group_layout,
-        .entries = &.{gpu.BindGroup.Entry.buffer(
-            0,
-            uniform_buffer,
-            0,
-            @sizeOf(UniformBufferObject),
-            @sizeOf(UniformBufferObject),
-        )},
-    }));
+    const bind_group = device.createBindGroup(
+        &gpu.BindGroup.Descriptor.init(.{
+            .label = label,
+            .layout = bind_group_layout,
+            .entries = &.{gpu.BindGroup.Entry.buffer(
+                0,
+                uniform_buffer,
+                0,
+                @sizeOf(UniformBufferObject),
+                @sizeOf(UniformBufferObject),
+            )},
+        }),
+    );
 
     const bind_group_layouts = [_]*gpu.BindGroupLayout{bind_group_layout};
-    const pipeline_layout = device.createPipelineLayout(&gpu.PipelineLayout.Descriptor.init(.{
-        .label = label,
-        .bind_group_layouts = &bind_group_layouts,
-    }));
+    const pipeline_layout = device.createPipelineLayout(
+        &gpu.PipelineLayout.Descriptor.init(.{
+            .label = label,
+            .bind_group_layouts = &bind_group_layouts,
+        }),
+    );
     defer pipeline_layout.release();
     // Create our render pipeline that will ultimately get pixels onto the screen.
     const pipeline_descriptor = gpu.RenderPipeline.Descriptor{
@@ -192,7 +208,10 @@ fn renderFrame(
 
         const proj = zm.perspectiveFovLh(
             std.math.pi / 4.0,
-            @as(f32, @floatFromInt(window_width)) / @as(f32, @floatFromInt(window_height)),
+            @as(f32, @floatFromInt(window_width)) / @as(
+                f32,
+                @floatFromInt(window_height),
+            ),
             0.5,
             100,
         );
@@ -203,7 +222,11 @@ fn renderFrame(
     const ubo: UniformBufferObject = .{
         .model_view_projection_matrix = mvp,
     };
-    encoder.writeBuffer(renderer.state().uniform_buffer, 0, &[_]UniformBufferObject{ubo});
+    encoder.writeBuffer(
+        renderer.state().uniform_buffer,
+        0,
+        &[_]UniformBufferObject{ubo},
+    );
 
     // Begin render pass
     const sky_blue_background = gpu.Color{ .r = 0.776, .g = 0.988, .b = 1, .a = 1 };
@@ -213,16 +236,27 @@ fn renderFrame(
         .load_op = .clear,
         .store_op = .store,
     }};
-    const render_pass = encoder.beginRenderPass(&gpu.RenderPassDescriptor.init(.{
-        .label = label,
-        .color_attachments = &color_attachments,
-    }));
+    const render_pass = encoder.beginRenderPass(
+        &gpu.RenderPassDescriptor.init(.{
+            .label = label,
+            .color_attachments = &color_attachments,
+        }),
+    );
     defer render_pass.release();
 
     // Draw
     render_pass.setPipeline(renderer.state().pipeline);
-    render_pass.setBindGroup(0, renderer.state().bind_group, null);
-    render_pass.setVertexBuffer(0, renderer.state().vertex_buffer, 0, @sizeOf(cube.Vertex) * cube.vertices.len);
+    render_pass.setBindGroup(
+        0,
+        renderer.state().bind_group,
+        null,
+    );
+    render_pass.setVertexBuffer(
+        0,
+        renderer.state().vertex_buffer,
+        0,
+        @sizeOf(cube.Vertex) * cube.vertices.len,
+    );
 
     render_pass.draw(cube.vertices.len, 1, 0, 0);
 
