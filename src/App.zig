@@ -220,10 +220,10 @@ fn update(core: *mach.Core.Mod, game: *Mod) !void {
     core.schedule(.present_frame);
 
     // update the window title every second
-    // if (game.state().title_timer.read() >= 1.0) {
-    //     game.state().title_timer.reset();
-    //     try updateWindowTitle(core);
-    // }
+    if (game.state().title_timer.read() >= 1.0) {
+        game.state().title_timer.reset();
+        try updateWindowTitle(core);
+    }
 }
 
 fn updateWindowTitle(core: *mach.Core.Mod) !void {
