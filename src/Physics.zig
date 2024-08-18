@@ -9,7 +9,6 @@ timer: mach.Timer,
 
 pub const components = .{
     .position = .{ .type = @Vector(3, f32) },
-    .rotation = .{ .type = zm.Quat },
     .velocity = .{ .type = @Vector(3, f32) },
 };
 

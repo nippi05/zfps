@@ -15,7 +15,8 @@ pub const name = .renderer;
 pub const Mod = mach.Mod(@This());
 
 pub const components = .{
-    .is_camera = .{ .type = void },
+    .camera = .{ .type = void },
+    .rotation = .{ .type = @Vector(2, f32) },
 };
 
 pub const systems = .{
@@ -170,23 +171,25 @@ fn renderFrame(
         const model = zm.identity(); // zm.mul(zm.rotationX(time * (std.math.pi / 2.0)), zm.rotationZ(time * (std.math.pi / 2.0)));
         // Get player position
         var q = try entities.query(.{
-            .is_camera = Mod.read(.is_camera),
+            .camera = Mod.read(.camera),
             .position = Physics.Mod.read(.position),
-            .rotation = Physics.Mod.read(.rotation),
+            .rotation = Mod.read(.rotation),
         });
         var position: @Vector(3, f32) = undefined;
-        var rotation: zm.Quat = undefined;
+        var rotation: @Vector(2, f32) = undefined;
         while (q.next()) |v| {
             for (v.position, v.rotation) |pos, rot| {
                 position = pos;
                 rotation = rot;
             }
         }
-        const view = zm.lookAtLh(
-            zm.Vec{ position[0], position[1], position[2], 1 },
-            zm.Vec{ 0, 0, 0, 1 },
-            zm.Vec{ 0, 1, 0, 0 },
+        // UNDERSTANDME: Courtesy of CHATGPT!! I DONT UNDERSTAND THE FOLLOWING.
+        // Is the handedness of this not right haha...
+        const view = zm.mul(
+            zm.translationV(-zm.Vec{ position[0], position[1], position[2], 1 }),
+            zm.mul(zm.rotationY(rotation[1]), zm.rotationX(rotation[0])),
         );
+
         const proj = zm.perspectiveFovLh(
             std.math.pi / 4.0,
             @as(f32, @floatFromInt(window_width)) / @as(f32, @floatFromInt(window_height)),
