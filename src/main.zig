@@ -5,6 +5,7 @@ pub const modules = .{
     mach.Core,
     @import("App.zig"),
     @import("Renderer.zig"),
+    @import("Physics.zig"),
 };
 
 pub fn main() !void {

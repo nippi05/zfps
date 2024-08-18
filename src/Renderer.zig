@@ -1,9 +1,10 @@
 const std = @import("std");
 const zm = @import("zmath");
 const mach = @import("mach");
+
 const cube = @import("cube.zig");
+const Physics = @import("Physics.zig");
 const gpu = mach.gpu;
-const math = mach.math;
 
 pipeline: *gpu.RenderPipeline,
 uniform_buffer: *gpu.Buffer,
@@ -14,8 +15,6 @@ pub const name = .renderer;
 pub const Mod = mach.Mod(@This());
 
 pub const components = .{
-    .position = .{ .type = zm.Vec },
-    .rotation = .{ .type = zm.Quat },
     .is_camera = .{ .type = void },
 };
 
@@ -172,10 +171,10 @@ fn renderFrame(
         // Get player position
         var q = try entities.query(.{
             .is_camera = Mod.read(.is_camera),
-            .position = Mod.read(.position),
-            .rotation = Mod.read(.rotation),
+            .position = Physics.Mod.read(.position),
+            .rotation = Physics.Mod.read(.rotation),
         });
-        var position: zm.Vec = undefined;
+        var position: @Vector(3, f32) = undefined;
         var rotation: zm.Quat = undefined;
         while (q.next()) |v| {
             for (v.position, v.rotation) |pos, rot| {
@@ -184,7 +183,7 @@ fn renderFrame(
             }
         }
         const view = zm.lookAtLh(
-            position,
+            zm.Vec{ position[0], position[1], position[2], 1 },
             zm.Vec{ 0, 0, 0, 1 },
             zm.Vec{ 0, 1, 0, 0 },
         );
