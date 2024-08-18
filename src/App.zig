@@ -13,19 +13,30 @@ pub const systems = .{
     .update = .{ .handler = update },
 };
 
-title_timer: mach.Timer,
+timer: mach.Timer,
+player: mach.EntityID,
 
-pub fn deinit(game: *Mod, renderer: *Renderer.Mod) void {
-    _ = game; // autofix
+pub fn deinit(renderer: *Renderer.Mod) void {
     renderer.schedule(.deinit);
 }
 
-fn init(game: *Mod, renderer: *Renderer.Mod) !void {
+fn init(
+    game: *Mod,
+    renderer: *Renderer.Mod,
+    entities: *mach.Entities.Mod,
+) !void {
     renderer.schedule(.init);
+
+    const player = try entities.new();
+
+    try renderer.set(player, .position, zm.Vec{ 0, 0, -4, 1 });
+    try renderer.set(player, .rotation, zm.quatFromRollPitchYaw(0, 0, 0));
+    try renderer.set(player, .is_camera, {});
 
     // Store our render pipeline in our module's state, so we can access it later on.
     game.init(.{
-        .title_timer = try mach.Timer.start(),
+        .player = player,
+        .timer = try mach.Timer.start(),
     });
 }
 
@@ -38,23 +49,11 @@ fn update(core: *mach.Core.Mod, game: *Mod, renderer: *Renderer.Mod) !void {
         }
     }
 
-    // update the window title every second
-    if (game.state().title_timer.read() >= 1.0) {
-        game.state().title_timer.reset();
-        try updateWindowTitle(core);
-    }
+    const delta_time = game.state().timer.lap();
+    const player = game.state().player;
+    var player_pos = renderer.get(player, .position).?;
+    player_pos[1] += 1 * delta_time;
+    try renderer.set(player, .position, player_pos);
 
     renderer.schedule(.render_frame);
-}
-
-fn updateWindowTitle(core: *mach.Core.Mod) !void {
-    try core.state().printTitle(
-        core.state().main_window,
-        "core-custom-entrypoint [ {d}fps ] [ Input {d}hz ]",
-        .{
-            // TODO(Core)
-            core.state().frameRate(),
-            core.state().inputRate(),
-        },
-    );
 }

@@ -13,6 +13,12 @@ bind_group: *gpu.BindGroup,
 pub const name = .renderer;
 pub const Mod = mach.Mod(@This());
 
+pub const components = .{
+    .position = .{ .type = zm.Vec },
+    .rotation = .{ .type = zm.Quat },
+    .is_camera = .{ .type = void },
+};
+
 pub const systems = .{
     .init = .{ .handler = init },
     .deinit = .{ .handler = deinit },
@@ -144,6 +150,7 @@ pub fn deinit(game: *Mod) void {
 fn renderFrame(
     core: *mach.Core.Mod,
     renderer: *Mod,
+    entities: *mach.Entities.Mod,
 ) !void {
     // Grab the back buffer of the swapchain
     // TODO(Core)
@@ -162,16 +169,30 @@ fn renderFrame(
 
     const mvp: zm.Mat = blk: {
         const model = zm.identity(); // zm.mul(zm.rotationX(time * (std.math.pi / 2.0)), zm.rotationZ(time * (std.math.pi / 2.0)));
+        // Get player position
+        var q = try entities.query(.{
+            .is_camera = Mod.read(.is_camera),
+            .position = Mod.read(.position),
+            .rotation = Mod.read(.rotation),
+        });
+        var position: zm.Vec = undefined;
+        var rotation: zm.Quat = undefined;
+        while (q.next()) |v| {
+            for (v.position, v.rotation) |pos, rot| {
+                position = pos;
+                rotation = rot;
+            }
+        }
         const view = zm.lookAtLh(
-            zm.Vec{ 0, 4, -4, 1 },
+            position,
             zm.Vec{ 0, 0, 0, 1 },
             zm.Vec{ 0, 1, 0, 0 },
         );
         const proj = zm.perspectiveFovLh(
             std.math.pi / 4.0,
             @as(f32, @floatFromInt(window_width)) / @as(f32, @floatFromInt(window_height)),
-            0.1,
-            10,
+            0.5,
+            100,
         );
 
         break :blk zm.mul(zm.mul(model, view), proj);
