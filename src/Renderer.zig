@@ -4,6 +4,7 @@ const mach = @import("mach");
 
 const cube = @import("cube.zig");
 const Physics = @import("Physics.zig");
+const Game = @import("App.zig");
 const gpu = mach.gpu;
 
 pipeline: *gpu.RenderPipeline,
@@ -156,17 +157,18 @@ fn init(
     });
 }
 
-pub fn deinit(game: *Mod) void {
-    game.state().pipeline.release();
-    game.state().uniform_buffer.release();
-    game.state().bind_group.release();
-    game.state().vertex_buffer.release();
+pub fn deinit(renderer: *Mod) void {
+    renderer.state().pipeline.release();
+    renderer.state().uniform_buffer.release();
+    renderer.state().bind_group.release();
+    renderer.state().vertex_buffer.release();
 }
 
 fn renderFrame(
     core: *mach.Core.Mod,
+    game: *Game.Mod,
     renderer: *Mod,
-    entities: *mach.Entities.Mod,
+    physics: *Physics.Mod,
 ) !void {
     // Grab the back buffer of the swapchain
     // TODO(Core)
@@ -186,19 +188,10 @@ fn renderFrame(
     const mvp: zm.Mat = blk: {
         const model = zm.identity(); // zm.mul(zm.rotationX(time * (std.math.pi / 2.0)), zm.rotationZ(time * (std.math.pi / 2.0)));
         // Get player position
-        var q = try entities.query(.{
-            .camera = Mod.read(.camera),
-            .position = Physics.Mod.read(.position),
-            .rotation = Mod.read(.rotation),
-        });
-        var position: @Vector(3, f32) = undefined;
-        var rotation: @Vector(2, f32) = undefined;
-        while (q.next()) |v| {
-            for (v.position, v.rotation) |pos, rot| {
-                position = pos;
-                rotation = rot;
-            }
-        }
+        const player = game.state().player;
+        const rotation = renderer.get(player, .rotation).?;
+        const position = physics.get(player, .position).?;
+
         // UNDERSTANDME: Courtesy of CHATGPT!! I DONT UNDERSTAND THE FOLLOWING.
         // Is the handedness of this not right haha...
         const view = zm.mul(
