@@ -1,32 +1,34 @@
 const std = @import("std");
 const mach = @import("mach");
 const zm = @import("zmath");
+
 const util = @import("util.zig");
-const Renderer = @import("Renderer.zig");
-const Physics = @import("Physics.zig");
+
 const Movement = @import("Movement.zig");
+const Physics = @import("Physics.zig");
+const Renderer = @import("Renderer.zig");
 
 pub const name = .app;
 pub const Mod = mach.Mod(@This());
 
+player: mach.EntityID,
+
 pub const systems = .{
-    .init = .{ .handler = init },
     .deinit = .{ .handler = deinit },
+    .init = .{ .handler = init },
     .update = .{ .handler = update },
 };
-
-player: mach.EntityID,
 
 pub fn deinit(renderer: *Renderer.Mod) void {
     renderer.schedule(.deinit);
 }
 
 fn init(
-    game: *Mod,
-    renderer: *Renderer.Mod,
-    physics: *Physics.Mod,
     entities: *mach.Entities.Mod,
+    game: *Mod,
     movement: *Movement.Mod,
+    physics: *Physics.Mod,
+    renderer: *Renderer.Mod,
 ) !void {
     renderer.schedule(.init);
     physics.schedule(.init);
@@ -48,9 +50,9 @@ fn init(
 fn update(
     core: *mach.Core.Mod,
     game: *Mod,
-    renderer: *Renderer.Mod,
-    physics: *Physics.Mod,
     movement: *Movement.Mod,
+    physics: *Physics.Mod,
+    renderer: *Renderer.Mod,
 ) !void {
     _ = core; // autofix
     _ = game; // autofix

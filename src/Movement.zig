@@ -42,9 +42,9 @@ fn init(
 fn update(
     core: *mach.Core.Mod,
     game: *Game.Mod,
+    movement: *Mod,
     physics: *Physics.Mod,
     renderer: *Renderer.Mod,
-    movement: *Mod,
 ) !void {
     const player: mach.EntityID = game.state().player;
 

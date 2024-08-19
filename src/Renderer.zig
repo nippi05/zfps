@@ -1,19 +1,22 @@
 const std = @import("std");
-const zm = @import("zmath");
 const mach = @import("mach");
+const zm = @import("zmath");
+
 const util = @import("util.zig");
 const cube = @import("cube.zig");
-const Physics = @import("Physics.zig");
+
 const Game = @import("App.zig");
+const Physics = @import("Physics.zig");
+
 const gpu = mach.gpu;
+
+pub const name = .renderer;
+pub const Mod = mach.Mod(@This());
 
 pipeline: *gpu.RenderPipeline,
 uniform_buffer: *gpu.Buffer,
 vertex_buffer: *gpu.Buffer,
 bind_group: *gpu.BindGroup,
-
-pub const name = .renderer;
-pub const Mod = mach.Mod(@This());
 
 pub const Rotation = struct {
     vertical: f32,
@@ -26,14 +29,21 @@ pub const components = .{
 };
 
 pub const systems = .{
-    .init = .{ .handler = init },
     .deinit = .{ .handler = deinit },
+    .init = .{ .handler = init },
     .render_frame = .{ .handler = renderFrame },
 };
 
 const UniformBufferObject = struct {
     model_view_projection_matrix: zm.Mat, // zmath is row major, have to transpose.
 };
+
+pub fn deinit(renderer: *Mod) void {
+    renderer.state().pipeline.release();
+    renderer.state().uniform_buffer.release();
+    renderer.state().bind_group.release();
+    renderer.state().vertex_buffer.release();
+}
 
 fn init(
     core: *mach.Core.Mod,
@@ -162,17 +172,10 @@ fn init(
     });
 }
 
-pub fn deinit(renderer: *Mod) void {
-    renderer.state().pipeline.release();
-    renderer.state().uniform_buffer.release();
-    renderer.state().bind_group.release();
-    renderer.state().vertex_buffer.release();
-}
-
 fn renderFrame(
     core: *mach.Core.Mod,
-    game: *Game.Mod,
     renderer: *Mod,
+    game: *Game.Mod,
     physics: *Physics.Mod,
 ) !void {
     // Grab the back buffer of the swapchain

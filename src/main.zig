@@ -4,9 +4,9 @@ const mach = @import("mach");
 pub const modules = .{
     mach.Core,
     @import("App.zig"),
-    @import("Renderer.zig"),
-    @import("Physics.zig"),
     @import("Movement.zig"),
+    @import("Physics.zig"),
+    @import("Renderer.zig"),
 };
 
 pub fn main() !void {

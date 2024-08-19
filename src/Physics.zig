@@ -1,6 +1,6 @@
 const std = @import("std");
-const zm = @import("zmath");
 const mach = @import("mach");
+const zm = @import("zmath");
 
 pub const name = .physics;
 pub const Mod = mach.Mod(@This());
