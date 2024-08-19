@@ -150,8 +150,8 @@ fn update(
     const new_rotation = Renderer.Rotation{
         .vertical = std.math.clamp(
             prev_rotation.vertical + rotating_angles.vertical,
-            -std.math.pi / @as(comptime_float, 2),
-            std.math.pi / @as(comptime_float, 2),
+            -std.math.pi / 2.0,
+            std.math.pi / 2.0,
         ),
         .horizontal = prev_rotation.horizontal + rotating_angles.horizontal,
     };
