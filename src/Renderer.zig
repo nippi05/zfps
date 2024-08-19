@@ -112,7 +112,7 @@ fn init(
     );
     const bind_group_layout = device.createBindGroupLayout(
         &gpu.BindGroupLayout.Descriptor.init(.{
-            .label = label,
+            .label = label ++ " bind group layout",
             .entries = &.{bind_group_layout_entry},
         }),
     );
@@ -120,7 +120,7 @@ fn init(
 
     const bind_group = device.createBindGroup(
         &gpu.BindGroup.Descriptor.init(.{
-            .label = label,
+            .label = label ++ " bind group",
             .layout = bind_group_layout,
             .entries = &.{gpu.BindGroup.Entry.buffer(
                 0,
@@ -135,14 +135,14 @@ fn init(
     const bind_group_layouts = [_]*gpu.BindGroupLayout{bind_group_layout};
     const pipeline_layout = device.createPipelineLayout(
         &gpu.PipelineLayout.Descriptor.init(.{
-            .label = label,
+            .label = label ++ " pipeline layout",
             .bind_group_layouts = &bind_group_layouts,
         }),
     );
     defer pipeline_layout.release();
     // Create our render pipeline that will ultimately get pixels onto the screen.
     const pipeline_descriptor = gpu.RenderPipeline.Descriptor{
-        .label = label,
+        .label = label ++ " pipeline descriptor",
         .fragment = &fragment,
         .layout = pipeline_layout,
         .vertex = gpu.VertexState.init(.{
@@ -182,7 +182,9 @@ fn renderFrame(
 
     // Create a command encoder
     const label = @tagName(name) ++ ".update";
-    const encoder: *gpu.CommandEncoder = core.state().device.createCommandEncoder(&.{ .label = label });
+    const encoder: *gpu.CommandEncoder = core.state().device.createCommandEncoder(&.{
+        .label = label ++ " command encoder",
+    });
     defer encoder.release();
 
     // Calculate mvp matrix
@@ -236,7 +238,7 @@ fn renderFrame(
     }};
     const render_pass = encoder.beginRenderPass(
         &gpu.RenderPassDescriptor.init(.{
-            .label = label,
+            .label = label ++ " render pass",
             .color_attachments = &color_attachments,
         }),
     );
@@ -262,7 +264,7 @@ fn renderFrame(
     render_pass.end();
 
     // Submit our commands to the queue
-    var command = encoder.finish(&.{ .label = label });
+    var command = encoder.finish(&.{ .label = label ++ " command buffer" });
     defer command.release();
     core.state().queue.submit(&[_]*gpu.CommandBuffer{command});
 
