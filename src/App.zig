@@ -122,7 +122,7 @@ fn update(
     }
 
     var rotating_angles = Renderer.Rotation{ .vertical = 0, .horizontal = 0 };
-    const rotation_speed = 0.01;
+    const rotation_speed = 0.03;
     var player_velocity = @Vector(3, f32){ 0, 0, 0 };
     const move_speed = 10;
     inline for (std.meta.fields(MoveKeys)) |field| {
