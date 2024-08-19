@@ -6,6 +6,7 @@ pub const modules = .{
     @import("App.zig"),
     @import("Renderer.zig"),
     @import("Physics.zig"),
+    @import("Movement.zig"),
 };
 
 pub fn main() !void {
