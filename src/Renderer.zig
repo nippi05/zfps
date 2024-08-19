@@ -50,7 +50,7 @@ fn init(
     defer shader_module.release();
 
     const vertex_attributes = [_]gpu.VertexAttribute{.{
-        .format = .float32x4,
+        .format = .float32x3,
         .offset = @offsetOf(cube.Vertex, "pos"),
         .shader_location = 0,
     }};

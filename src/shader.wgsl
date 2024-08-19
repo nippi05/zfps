@@ -1,9 +1,9 @@
 @binding(0) @group(0) var<uniform> mvp : mat4x4<f32>;
 
 @vertex fn vertex_main(
-    @location(0) pos : vec4<f32>,
+    @location(0) pos : vec3<f32>,
 ) -> @builtin(position) vec4<f32> {
-    return mvp * pos;
+    return mvp * vec4<f32>(pos, 1);
 }
 
 @fragment fn frag_main() -> @location(0) vec4<f32> {
