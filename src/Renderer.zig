@@ -1,7 +1,7 @@
 const std = @import("std");
 const zm = @import("zmath");
 const mach = @import("mach");
-
+const util = @import("util.zig");
 const cube = @import("cube.zig");
 const Physics = @import("Physics.zig");
 const Game = @import("App.zig");
@@ -196,7 +196,7 @@ fn renderFrame(
         // Is the handedness of this not right haha...
         const view = zm.mul(
             zm.translationV(-zm.Vec{ position[0], position[1], position[2], 1 }),
-            zm.mul(zm.rotationY(rotation[1]), zm.rotationX(rotation[0])),
+            util.rotationToMat(rotation),
         );
 
         const proj = zm.perspectiveFovLh(

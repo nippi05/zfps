@@ -1,7 +1,7 @@
 const std = @import("std");
 const mach = @import("mach");
 const zm = @import("zmath");
-
+const util = @import("util.zig");
 const Renderer = @import("Renderer.zig");
 const Physics = @import("Physics.zig");
 
@@ -143,22 +143,21 @@ fn update(
         }
     }
     game.state().pressed_keys = pressed_keys;
-    try physics.set(player, .velocity, player_velocity);
 
     const prev_rotation = renderer.get(player, .rotation).?;
+    const new_rotation: @Vector(2, f32) = .{
+        std.math.clamp(
+            prev_rotation[0] + rotating_angles[0],
+            -std.math.pi / @as(comptime_float, 2),
+            std.math.pi / @as(comptime_float, 2),
+        ),
+        prev_rotation[1] + rotating_angles[1],
+    };
+    try renderer.set(player, .rotation, new_rotation);
 
-    try renderer.set(
-        player,
-        .rotation,
-        .{
-            std.math.clamp(
-                prev_rotation[0] + rotating_angles[0],
-                -std.math.pi / @as(comptime_float, 2),
-                std.math.pi / @as(comptime_float, 2),
-            ),
-            prev_rotation[1] + rotating_angles[1],
-        },
-    );
+    const rotate_matrix: zm.Mat = util.rotationToMat(new_rotation);
+    const rotated_player_velocity = zm.mul(rotate_matrix, zm.Vec{ player_velocity[0], player_velocity[1], player_velocity[2], 1 });
+    try physics.set(player, .velocity, .{ rotated_player_velocity[0], rotated_player_velocity[1], rotated_player_velocity[2] });
 
     physics.schedule(.update);
     renderer.schedule(.render_frame);
