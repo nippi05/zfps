@@ -15,9 +15,14 @@ bind_group: *gpu.BindGroup,
 pub const name = .renderer;
 pub const Mod = mach.Mod(@This());
 
+pub const Rotation = struct {
+    vertical: f32,
+    horizontal: f32,
+};
+
 pub const components = .{
     .camera = .{ .type = void },
-    .rotation = .{ .type = @Vector(2, f32) },
+    .rotation = .{ .type = Rotation },
 };
 
 pub const systems = .{

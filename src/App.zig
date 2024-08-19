@@ -49,7 +49,7 @@ fn init(
 
     try physics.set(player, .position, .{ 0, 0, -4 });
     try physics.set(player, .velocity, .{ 0, 0, 0 });
-    try renderer.set(player, .rotation, .{ 0, 0 });
+    try renderer.set(player, .rotation, .{ .vertical = 0, .horizontal = 0 });
     try renderer.set(player, .camera, {});
 
     // Store our render pipeline in our module's state, so we can access it later on.
@@ -121,7 +121,7 @@ fn update(
         }
     }
 
-    var rotating_angles = @Vector(2, f32){ 0, 0 };
+    var rotating_angles = Renderer.Rotation{ .vertical = 0, .horizontal = 0 };
     const rotation_speed = 0.01;
     var player_velocity = @Vector(3, f32){ 0, 0, 0 };
     const move_speed = 10;
@@ -129,29 +129,31 @@ fn update(
         const key = @field(MoveKeys, field.name);
         if (pressed_keys.isSet(@intFromEnum(key))) {
             switch (key) {
+                // Movement
                 .w => player_velocity[2] += move_speed,
                 .s => player_velocity[2] -= move_speed,
                 .d => player_velocity[0] += move_speed,
                 .a => player_velocity[0] -= move_speed,
                 .space => player_velocity[1] += move_speed,
                 .left_shift => player_velocity[1] -= move_speed,
-                .left => rotating_angles[1] += rotation_speed,
-                .right => rotating_angles[1] -= rotation_speed,
-                .up => rotating_angles[0] += rotation_speed,
-                .down => rotating_angles[0] -= rotation_speed,
+                // Rotation
+                .left => rotating_angles.horizontal += rotation_speed,
+                .right => rotating_angles.horizontal -= rotation_speed,
+                .up => rotating_angles.vertical += rotation_speed,
+                .down => rotating_angles.vertical -= rotation_speed,
             }
         }
     }
     game.state().pressed_keys = pressed_keys;
 
     const prev_rotation = renderer.get(player, .rotation).?;
-    const new_rotation: @Vector(2, f32) = .{
-        std.math.clamp(
-            prev_rotation[0] + rotating_angles[0],
+    const new_rotation = Renderer.Rotation{
+        .vertical = std.math.clamp(
+            prev_rotation.vertical + rotating_angles.vertical,
             -std.math.pi / @as(comptime_float, 2),
             std.math.pi / @as(comptime_float, 2),
         ),
-        prev_rotation[1] + rotating_angles[1],
+        .horizontal = prev_rotation.horizontal + rotating_angles.horizontal,
     };
     try renderer.set(player, .rotation, new_rotation);
 
