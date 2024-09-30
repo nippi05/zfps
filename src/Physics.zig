@@ -5,7 +5,7 @@ const zm = @import("zmath");
 pub const name = .physics;
 pub const Mod = mach.Mod(@This());
 
-timer: mach.Timer,
+timer: mach.time.Timer,
 
 pub const components = .{
     .position = .{ .type = @Vector(3, f32) },
@@ -19,7 +19,7 @@ pub const systems = .{
 
 fn init(physics: *Mod) !void {
     physics.init(.{
-        .timer = try mach.Timer.start(),
+        .timer = try mach.time.Timer.start(),
     });
 }
 

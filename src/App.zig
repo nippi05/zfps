@@ -14,13 +14,28 @@ pub const Mod = mach.Mod(@This());
 player: mach.EntityID,
 
 pub const systems = .{
+    .start = .{ .handler = start },
     .deinit = .{ .handler = deinit },
     .init = .{ .handler = init },
-    .update = .{ .handler = update },
+    .tick = .{ .handler = tick },
 };
 
 pub fn deinit(renderer: *Renderer.Mod) void {
     renderer.schedule(.deinit);
+}
+
+fn start(
+    core: *mach.Core.Mod,
+    renderer: *Renderer.Mod,
+    physics: *Physics.Mod,
+    movement: *Movement.Mod,
+    app: *Mod,
+) !void {
+    core.schedule(.init);
+    renderer.schedule(.init);
+    physics.schedule(.init);
+    movement.schedule(.init);
+    app.schedule(.init);
 }
 
 fn init(
@@ -47,7 +62,7 @@ fn init(
     });
 }
 
-fn update(
+fn tick(
     core: *mach.Core.Mod,
     game: *Mod,
     movement: *Movement.Mod,

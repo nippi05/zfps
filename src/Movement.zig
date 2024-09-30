@@ -48,9 +48,8 @@ fn update(
 ) !void {
     const player: mach.EntityID = game.state().player;
 
-    var iter: mach.Core.EventIterator = core.state().pollEvents();
     var pressed_keys = movement.state().pressed_keys;
-    while (iter.next()) |event| {
+    while (core.state().nextEvent()) |event| {
         switch (event) {
             .close => core.schedule(.exit), // Tell mach.Core to exit the app
             .key_press => |e| {
