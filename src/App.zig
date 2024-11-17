@@ -1,12 +1,12 @@
 const std = @import("std");
+
 const mach = @import("mach");
 const zm = @import("zmath");
-
-const util = @import("util.zig");
 
 const Movement = @import("Movement.zig");
 const Physics = @import("Physics.zig");
 const Renderer = @import("Renderer.zig");
+const util = @import("util.zig");
 
 pub const name = .app;
 pub const Mod = mach.Mod(@This());
@@ -20,7 +20,6 @@ pub const systems = .{
     .tick = .{ .handler = tick },
 };
 
-pub fn deinit(renderer: *Renderer.Mod) void {
 pub fn deinit(renderer: *Renderer.Mod, core: *mach.Core.Mod) void {
     renderer.schedule(.deinit);
     core.schedule(.deinit);

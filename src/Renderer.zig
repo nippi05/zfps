@@ -1,14 +1,13 @@
 const std = @import("std");
+
 const mach = @import("mach");
+const gpu = mach.gpu;
 const zm = @import("zmath");
 
-const util = @import("util.zig");
 const cube = @import("cube.zig");
-
 const Game = @import("App.zig");
 const Physics = @import("Physics.zig");
-
-const gpu = mach.gpu;
+const util = @import("util.zig");
 
 pub const name = .renderer;
 pub const Mod = mach.Mod(@This());

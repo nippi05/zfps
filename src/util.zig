@@ -1,4 +1,5 @@
 const zm = @import("zmath");
+
 const Renderer = @import("Renderer.zig");
 
 pub inline fn rotationToMat(rotation: Renderer.Rotation) zm.Mat {
