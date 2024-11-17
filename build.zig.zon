@@ -3,7 +3,7 @@
     .version = "0.0.0",
 
     .dependencies = .{
-        .zmath = .{ .path = "libs/zig-gamedev/libs/zmath" },
+        .zmath = .{ .path = "libs/zmath" },
         .mach = .{ .path = "libs/mach" },
     },
     .paths = .{
