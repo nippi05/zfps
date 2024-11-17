@@ -10,14 +10,11 @@ pub const modules = .{
 };
 
 pub fn main() !void {
-    var gpa_implementation = std.heap.GeneralPurposeAllocator(.{}){};
-    // defer std.debug.assert(gpa_implementation.deinit() == .ok);
-    const gpa = gpa_implementation.allocator();
-
-    try mach.mods.init(gpa);
+    const allocator = std.heap.c_allocator;
+    try mach.mods.init(allocator);
 
     mach.mods.schedule(.app, .start);
 
-    const stack_space = try gpa.alloc(u8, 8 * 1024 * 1024);
+    const stack_space = try allocator.alloc(u8, 8 * 1024 * 1024);
     try mach.mods.dispatch(stack_space, .{});
 }

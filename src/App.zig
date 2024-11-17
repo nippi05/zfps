@@ -21,7 +21,9 @@ pub const systems = .{
 };
 
 pub fn deinit(renderer: *Renderer.Mod) void {
+pub fn deinit(renderer: *Renderer.Mod, core: *mach.Core.Mod) void {
     renderer.schedule(.deinit);
+    core.schedule(.deinit);
 }
 
 fn start(
@@ -39,15 +41,14 @@ fn start(
 }
 
 fn init(
+    core: *mach.Core.Mod,
     entities: *mach.Entities.Mod,
     game: *Mod,
-    movement: *Movement.Mod,
     physics: *Physics.Mod,
     renderer: *Renderer.Mod,
 ) !void {
-    renderer.schedule(.init);
-    physics.schedule(.init);
-    movement.schedule(.init);
+    core.state().on_tick = game.system(.tick);
+    core.state().on_exit = game.system(.deinit);
 
     const player = try entities.new();
 
@@ -60,6 +61,7 @@ fn init(
     game.init(.{
         .player = player,
     });
+    core.schedule(.start);
 }
 
 fn tick(
