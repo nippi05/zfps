@@ -12,6 +12,7 @@ pub const name = .movement;
 pub const Mod = mach.Mod(@This());
 
 pressed_keys: std.StaticBitSet(std.meta.fields(MoveKeys).len),
+delta_timer: mach.time.Timer,
 
 pub const systems = .{
     .init = .{ .handler = init },
@@ -36,6 +37,7 @@ fn init(
 ) !void {
     movement.init(.{
         .pressed_keys = std.StaticBitSet(std.meta.fields(MoveKeys).len).initEmpty(),
+        .delta_timer = try mach.time.Timer.start(),
     });
 }
 
@@ -81,9 +83,9 @@ fn update(
     }
 
     var rotating_angles = Renderer.Rotation{ .vertical = 0, .horizontal = 0 };
-    const rotation_speed = 0.003;
+    const rotation_speed = 3;
     var player_velocity = @Vector(3, f32){ 0, 0, 0 };
-    const move_speed = 10;
+    const move_speed = 10_000;
     inline for (std.meta.fields(MoveKeys)) |field| {
         const key = @field(MoveKeys, field.name);
         if (pressed_keys.isSet(@intFromEnum(key))) {
@@ -105,14 +107,15 @@ fn update(
     }
     movement.state().pressed_keys = pressed_keys;
 
+    const dt = movement.state().delta_timer.lap();
     const prev_rotation = renderer.get(player, .rotation).?;
     const new_rotation = Renderer.Rotation{
         .vertical = std.math.clamp(
-            prev_rotation.vertical + rotating_angles.vertical,
+            prev_rotation.vertical + dt * rotating_angles.vertical,
             -std.math.pi / 2.0,
             std.math.pi / 2.0,
         ),
-        .horizontal = prev_rotation.horizontal + rotating_angles.horizontal,
+        .horizontal = prev_rotation.horizontal + dt * rotating_angles.horizontal,
     };
     try renderer.set(player, .rotation, new_rotation);
 
@@ -124,8 +127,8 @@ fn update(
         1,
     });
     try physics.set(player, .velocity, .{
-        rotated_player_velocity[0],
-        rotated_player_velocity[1],
-        rotated_player_velocity[2],
+        rotated_player_velocity[0] * dt,
+        rotated_player_velocity[1] * dt,
+        rotated_player_velocity[2] * dt,
     });
 }
