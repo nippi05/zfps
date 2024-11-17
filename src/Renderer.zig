@@ -113,7 +113,7 @@ fn init(
         .size = @sizeOf(UniformBufferObject),
     });
 
-    const bind_group_layout_entry = gpu.BindGroupLayout.Entry.buffer(
+    const bind_group_layout_entry = gpu.BindGroupLayout.Entry.initBuffer(
         0,
         .{ .vertex = true },
         .uniform,
@@ -132,7 +132,7 @@ fn init(
         &gpu.BindGroup.Descriptor.init(.{
             .label = label ++ " bind group",
             .layout = bind_group_layout,
-            .entries = &.{gpu.BindGroup.Entry.buffer(
+            .entries = &.{gpu.BindGroup.Entry.initBuffer(
                 0,
                 uniform_buffer,
                 0,
