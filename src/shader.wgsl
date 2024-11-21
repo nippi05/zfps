@@ -10,7 +10,7 @@ struct Output {
 ) -> Output {
 	var output: Output;
 	output.pos = mvp * vec4(pos, 1);
-	output.color = pos;
+	output.color = vec3(pos.x,pos.y, pos.z);
     return output;
 }
 

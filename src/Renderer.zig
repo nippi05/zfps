@@ -7,7 +7,6 @@ const zm = @import("zmath");
 const cube = @import("cube.zig");
 const Game = @import("App.zig");
 const Physics = @import("Physics.zig");
-const util = @import("util.zig");
 
 pub const name = .renderer;
 pub const Mod = mach.Mod(@This());
@@ -17,14 +16,11 @@ uniform_buffer: *gpu.Buffer,
 vertex_buffer: *gpu.Buffer,
 bind_group: *gpu.BindGroup,
 
-pub const Rotation = struct {
-    vertical: f32,
-    horizontal: f32,
-};
+camera: Camera,
 
-pub const components = .{
-    .camera = .{ .type = void },
-    .rotation = .{ .type = Rotation },
+pub const Camera = struct {
+    position: struct { x: f32, z: f32 },
+    zoom: f32,
 };
 
 pub const systems = .{
@@ -34,7 +30,7 @@ pub const systems = .{
 };
 
 const UniformBufferObject = struct {
-    model_view_projection_matrix: zm.Mat, // zmath is row major, have to transpose.
+    model_view_projection_matrix: zm.Mat,
 };
 
 pub fn deinit(renderer: *Mod) void {
@@ -58,7 +54,7 @@ fn init(
     );
     defer shader_module.release();
 
-    const vertex_attributes = [_]gpu.VertexAttribute{.{
+    const vertex_attributes = [_]gpu.VertexAttribute{ .{
         .format = .float32x3,
         .offset = @offsetOf(cube.Vertex, "pos"),
         .shader_location = 0,
@@ -168,14 +164,13 @@ fn init(
         .bind_group = bind_group,
         .uniform_buffer = uniform_buffer,
         .vertex_buffer = vertex_buffer,
+        .camera = .{ .position = .{ .x = 0, .z = 0 }, .zoom = std.math.pi / 4.0 },
     });
 }
 
 fn renderFrame(
     core: *mach.Core.Mod,
     renderer: *Mod,
-    game: *Game.Mod,
-    physics: *Physics.Mod,
 ) !void {
     // Grab the back buffer of the swapchain
     // TODO(Core)
@@ -197,19 +192,16 @@ fn renderFrame(
     const mvp: zm.Mat = blk: {
         const model = zm.identity(); // zm.mul(zm.rotationX(time * (std.math.pi / 2.0)), zm.rotationZ(time * (std.math.pi / 2.0)));
         // Get player position
-        const player = game.state().player;
-        const rotation = renderer.get(player, .rotation).?;
-        const position = physics.get(player, .position).?;
+        const camera: Camera = renderer.state().camera;
 
-        // UNDERSTANDME: Courtesy of CHATGPT!! I DONT UNDERSTAND THE FOLLOWING.
-        // Is the handedness of this not right haha...
-        const view = zm.mul(
-            zm.translationV(-zm.Vec{ position[0], position[1], position[2], 1 }),
-            util.rotationToMat(rotation),
+        const view = zm.lookToLh(
+            .{ camera.position.x, 5, camera.position.z - 5, 1 },
+            .{ 0, -1, 1, 1 },
+            .{ 0, 1, 0, 1 },
         );
 
         const proj = zm.perspectiveFovLh(
-            std.math.pi / 4.0,
+            camera.zoom,
             @as(f32, @floatFromInt(window_width)) / @as(
                 f32,
                 @floatFromInt(window_height),
@@ -217,9 +209,18 @@ fn renderFrame(
             0.5,
             100,
         );
+        _ = model;
 
-        break :blk zm.mul(zm.mul(model, view), proj);
+        break :blk zm.mul(view, proj);
     };
+    // std.debug.print("\nMVP: \n", .{});
+    // for (mvp) |row| {
+    //     std.debug.print("{} ", .{row[0]});
+    //     std.debug.print("{} ", .{row[1]});
+    //     std.debug.print("{} ", .{row[2]});
+    //     std.debug.print("{} ", .{row[3]});
+    //     std.debug.print("\n", .{});
+    // }
     // Update uniform buffer
     const ubo: UniformBufferObject = .{
         .model_view_projection_matrix = mvp,

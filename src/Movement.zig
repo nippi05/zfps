@@ -6,7 +6,6 @@ const zm = @import("zmath");
 const Game = @import("App.zig");
 const Physics = @import("Physics.zig");
 const Renderer = @import("Renderer.zig");
-const util = @import("util.zig");
 
 pub const name = .movement;
 pub const Mod = mach.Mod(@This());
@@ -20,9 +19,11 @@ pub const systems = .{
 };
 
 const MoveKeys = enum {
+    q,
     w,
-    a,
-    s,
+    e,
+    r,
+    f,
     d,
     left_shift,
     space,
@@ -43,13 +44,11 @@ fn init(
 
 fn update(
     core: *mach.Core.Mod,
-    game: *Game.Mod,
     movement: *Mod,
-    physics: *Physics.Mod,
     renderer: *Renderer.Mod,
+    physics: *Physics.Mod,
+    entities: *mach.Entities.Mod,
 ) !void {
-    const player: mach.EntityID = game.state().player;
-
     var pressed_keys = movement.state().pressed_keys;
     while (core.state().nextEvent()) |event| {
         switch (event) {
@@ -78,57 +77,45 @@ fn update(
                     },
                 }
             },
+            .mouse_press => |mouse_event| {
+                std.log.debug("Mouse button pressed: {}", .{mouse_event});
+            },
             else => {},
         }
     }
 
-    var rotating_angles = Renderer.Rotation{ .vertical = 0, .horizontal = 0 };
-    const rotation_speed = 3;
-    var player_velocity = @Vector(3, f32){ 0, 0, 0 };
-    const move_speed = 10_000;
+    var camera = renderer.state().camera;
+    const camera_speed = 1;
+    const delta_time = movement.state().delta_timer.lap();
     inline for (std.meta.fields(MoveKeys)) |field| {
         const key = @field(MoveKeys, field.name);
         if (pressed_keys.isSet(@intFromEnum(key))) {
             switch (key) {
-                // Movement
-                .w => player_velocity[2] += move_speed,
-                .s => player_velocity[2] -= move_speed,
-                .d => player_velocity[0] += move_speed,
-                .a => player_velocity[0] -= move_speed,
-                .space => player_velocity[1] += move_speed,
-                .left_shift => player_velocity[1] -= move_speed,
-                // Rotation
-                .left => rotating_angles.horizontal += rotation_speed,
-                .right => rotating_angles.horizontal -= rotation_speed,
-                .up => rotating_angles.vertical += rotation_speed,
-                .down => rotating_angles.vertical -= rotation_speed,
+                // camera
+                .left => {
+                    camera.position.x -= delta_time * camera_speed;
+                },
+                .right => camera.position.x += delta_time * camera_speed,
+                .up => camera.position.z += delta_time * camera_speed,
+                .down => camera.position.z -= delta_time * camera_speed,
+
+                // center camrea on champion
+                .space => {
+                    camera.position.x = 0;
+                    camera.position.z = 0;
+                },
+
+                .q => {
+                    const projectile = try entities.new();
+
+                    try physics.set(projectile, .position, .{ 0, 0.5, 0 });
+                    try physics.set(projectile, .velocity, .{ 1, 0, 1 });
+                },
+                // Abilities
+                else => {}, // TOOD: handle these events
             }
         }
     }
+    renderer.state().camera = camera;
     movement.state().pressed_keys = pressed_keys;
-
-    const dt = movement.state().delta_timer.lap();
-    const prev_rotation = renderer.get(player, .rotation).?;
-    const new_rotation = Renderer.Rotation{
-        .vertical = std.math.clamp(
-            prev_rotation.vertical + dt * rotating_angles.vertical,
-            -std.math.pi / 2.0,
-            std.math.pi / 2.0,
-        ),
-        .horizontal = prev_rotation.horizontal + dt * rotating_angles.horizontal,
-    };
-    try renderer.set(player, .rotation, new_rotation);
-
-    const rotate_matrix: zm.Mat = util.rotationToMat(new_rotation);
-    const rotated_player_velocity = zm.mul(rotate_matrix, zm.Vec{
-        player_velocity[0],
-        player_velocity[1],
-        player_velocity[2],
-        1,
-    });
-    try physics.set(player, .velocity, .{
-        rotated_player_velocity[0] * dt,
-        rotated_player_velocity[1] * dt,
-        rotated_player_velocity[2] * dt,
-    });
 }
